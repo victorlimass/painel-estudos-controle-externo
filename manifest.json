@@ -1,6 +1,8 @@
 {
+  "id": "./",
   "name": "Painel de estudos — Controle Externo",
   "short_name": "Controle Externo",
+  "categories": ["education", "productivity"],
   "description": "Painel pessoal de acompanhamento do plano de estudos para concursos da área de controle externo (foco TCU).",
   "lang": "pt-BR",
   "start_url": ".",

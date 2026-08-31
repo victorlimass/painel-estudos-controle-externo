@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de estudos — Controle Externo</title>
 <meta name="description" content="Painel pessoal de acompanhamento do plano de estudos para concursos da área de controle externo (foco TCU).">
-<meta name="theme-color" content="#7A2530">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#7A2530" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1e232d" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -16,14 +19,15 @@
 <meta name="apple-mobile-web-app-title" content="Painel Controle Externo">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
+    color-scheme:light dark;
     --paper:#EEEEE6;
     --card:#FBFAF5;
     --ink:#202A3B;
     --ink-soft:#57606F;
-    --ink-faint:#8B92A0;
+    --ink-faint:#6B7280;
     --accent:#7A2530;
     --accent-soft:#F1E1E0;
     --success:#2F6B4F;
@@ -32,9 +36,24 @@
     --line-strong:#C3BEAC;
     --radius-sm:4px;
     --radius-md:6px;
-    --font-display:'Fraunces', serif;
-    --font-body:'IBM Plex Sans', -apple-system, sans-serif;
-    --font-mono:'IBM Plex Mono', monospace;
+    --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#161a22;
+      --card:#1e232d;
+      --ink:#e8e6df;
+      --ink-soft:#b3b7c0;
+      --ink-faint:#9aa0aa;
+      --accent:#e0919a;
+      --accent-soft:#3a2529;
+      --success:#7fc8a4;
+      --success-soft:#243229;
+      --line:#2c313c;
+      --line-strong:#3a404c;
+    }
   }
   *{box-sizing:border-box;}
   body{
@@ -46,6 +65,11 @@
     padding:32px 20px 80px;
   }
   .wrap{max-width:880px;margin:0 auto;}
+
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+  }
 
   header.top{margin-bottom:28px;}
   header.top .kicker{
@@ -130,6 +154,7 @@
 
   section.panel{display:none;}
   section.panel.active{display:block;}
+  section.panel:focus{outline:none;}
 
   .card{
     background:var(--card);
@@ -193,6 +218,23 @@
     color:var(--success);
   }
 
+  .btn-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  button.btn{
+    font-family:var(--font-body);
+    font-size:13px;
+    font-weight:500;
+    padding:7px 14px;
+    border:1px solid var(--line-strong);
+    background:var(--card);
+    color:var(--ink);
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+  }
+  button.btn:hover{border-color:var(--accent);}
+  button.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  button.btn.danger{color:var(--accent);border-color:var(--accent-soft);}
+  button.btn.danger:hover{border-color:var(--accent);}
+
   .streak{display:flex;gap:5px;margin-top:10px;}
   .streak .dot{
     width:14px;height:14px;
@@ -200,6 +242,23 @@
     border-radius:2px;
   }
   .streak .dot.done{background:var(--success);border-color:var(--success);}
+
+  .hm-scroll{overflow-x:auto;padding-bottom:4px;}
+  #heatmapGrid{
+    display:grid;
+    grid-template-rows:repeat(7, 11px);
+    grid-auto-flow:column;
+    grid-auto-columns:11px;
+    gap:3px;
+    width:max-content;
+  }
+  .hm-cell{
+    width:11px;height:11px;
+    border-radius:2px;
+    background:var(--line);
+  }
+  .hm-cell.done{background:var(--success);}
+  .hm-cell.out{opacity:.3;}
 
   .progress-bar{
     height:6px;
@@ -227,6 +286,7 @@
   table.week-table{width:100%;border-collapse:collapse;font-size:13px;}
   table.week-table td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
   table.week-table tr:last-child td{border-bottom:none;}
+  table.week-table tr.current-week td{background:var(--accent-soft);}
   .week-num{
     font-family:var(--font-mono);
     color:var(--ink-faint);
@@ -247,12 +307,24 @@
     color:var(--accent);
     font-weight:500;
   }
+  .week-focus .now-chip{
+    display:inline-block;
+    margin-left:6px;
+    font-family:var(--font-mono);
+    font-size:10px;
+    color:var(--accent);
+    border:1px solid var(--accent);
+    border-radius:var(--radius-sm);
+    padding:0 5px;
+    vertical-align:1px;
+  }
   .week-check{width:28px;text-align:center;}
   input[type=checkbox]{
     width:16px;height:16px;
     accent-color:var(--success);
     cursor:pointer;
   }
+  input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 
   .nucleo-item{
     border-bottom:1px solid var(--line);
@@ -351,22 +423,38 @@
 
   <div class="countdown-row" id="countdownRow"></div>
 
-  <nav class="tabs" id="tabs">
-    <button data-tab="painel" class="active">Painel</button>
-    <button data-tab="cronograma">Cronograma</button>
-    <button data-tab="nucleo">Núcleo de conteúdo</button>
-    <button data-tab="plataformas">Plataformas</button>
-    <button data-tab="datas">Datas</button>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Seções do painel">
+    <button role="tab" id="tab-painel" aria-controls="panel-painel" aria-selected="true" data-tab="painel" class="active">Painel</button>
+    <button role="tab" id="tab-cronograma" aria-controls="panel-cronograma" aria-selected="false" tabindex="-1" data-tab="cronograma">Cronograma</button>
+    <button role="tab" id="tab-nucleo" aria-controls="panel-nucleo" aria-selected="false" tabindex="-1" data-tab="nucleo">Núcleo de conteúdo</button>
+    <button role="tab" id="tab-plataformas" aria-controls="panel-plataformas" aria-selected="false" tabindex="-1" data-tab="plataformas">Plataformas</button>
+    <button role="tab" id="tab-datas" aria-controls="panel-datas" aria-selected="false" tabindex="-1" data-tab="datas">Datas</button>
   </nav>
 
-  <section class="panel active" id="panel-painel">
+  <section class="panel active" id="panel-painel" role="tabpanel" aria-labelledby="tab-painel" tabindex="0">
     <div class="card" id="faseAtualCard"></div>
     <div class="card" id="focoSemanaCard"></div>
     <div class="card" id="hojeCard"></div>
+    <div class="card" id="constanciaCard">
+      <h3>Constância</h3>
+      <p class="progress-label" id="heatmapLabel"></p>
+      <div class="hm-scroll"><div id="heatmapGrid" role="img" aria-label="Mapa de constância"></div></div>
+    </div>
     <div class="card" id="plataformaAtivaCard"></div>
+    <div class="card" id="backupCard">
+      <h3>Backup do progresso</h3>
+      <p class="muted">O progresso fica só neste navegador. Exporte antes de trocar de aparelho ou de limpar o histórico.</p>
+      <div class="btn-row">
+        <button type="button" class="btn" id="exportBtn">Exportar JSON</button>
+        <button type="button" class="btn" id="importBtn">Importar JSON</button>
+        <button type="button" class="btn danger" id="resetBtn">Resetar</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <p class="muted" id="backupMsg" role="status" aria-live="polite" style="margin-top:8px;"></p>
+    </div>
   </section>
 
-  <section class="panel" id="panel-cronograma">
+  <section class="panel" id="panel-cronograma" role="tabpanel" aria-labelledby="tab-cronograma" tabindex="0" hidden>
     <div class="card">
       <h2>Progresso do cronograma</h2>
       <div class="progress-bar"><div id="weeksProgressBar" style="width:0%"></div></div>
@@ -375,7 +463,7 @@
     <div id="phasesContainer"></div>
   </section>
 
-  <section class="panel" id="panel-nucleo">
+  <section class="panel" id="panel-nucleo" role="tabpanel" aria-labelledby="tab-nucleo" tabindex="0" hidden>
     <div class="card">
       <h2>Progresso do núcleo</h2>
       <div class="progress-bar"><div id="nucleoProgressBar" style="width:0%"></div></div>
@@ -391,7 +479,7 @@
     </div>
   </section>
 
-  <section class="panel" id="panel-plataformas">
+  <section class="panel" id="panel-plataformas" role="tabpanel" aria-labelledby="tab-plataformas" tabindex="0" hidden>
     <div class="card">
       <h2>Como usar cada plataforma</h2>
       <table class="plat-table">
@@ -405,10 +493,10 @@
     </div>
   </section>
 
-  <section class="panel" id="panel-datas">
+  <section class="panel" id="panel-datas" role="tabpanel" aria-labelledby="tab-datas" tabindex="0" hidden>
     <div class="card">
       <h2>Calendário consolidado</h2>
-      <table class="dates-table" id="datesTable"></table>
+      <table class="dates-table" id="datesTable" aria-label="Calendário consolidado de datas-chave"></table>
     </div>
     <div class="card">
       <h2>Provas oportunistas — sem estudo específico</h2>
@@ -423,240 +511,218 @@
 
 </div>
 
+<script src="data.js"></script>
 <script>
+/* ============================================================================
+   LÓGICA DO PAINEL — o conteúdo do plano fica em data.js.
+   ========================================================================== */
 const STORAGE_KEY = 'controle-externo-progress';
+const SCHEMA_VERSION = 1;
 
-const weeks = [
-  {n:1, faseId:1, start:'2026-08-31', end:'2026-09-06', foco:'Diagnóstico: reunir PDFs de legislação, montar caderno de erros, configurar Estratégia Concursos. Iniciar Português e Direito Administrativo (conceitos-base).'},
-  {n:2, faseId:1, start:'2026-09-07', end:'2026-09-13', foco:'Direito Constitucional (conceitos-base) + continuar Português.'},
-  {n:3, faseId:1, start:'2026-09-14', end:'2026-09-20', foco:'Direito Administrativo: ato administrativo, agentes públicos, poderes da administração.'},
-  {n:4, faseId:1, start:'2026-09-21', end:'2026-09-27', foco:'AFO: orçamento público, ciclo orçamentário, PPA, LDO, LOA.'},
-  {n:5, faseId:2, start:'2026-09-28', end:'2026-10-04', foco:'Licitações — Lei 14.133/2021 completa.'},
-  {n:6, faseId:2, start:'2026-10-05', end:'2026-10-11', foco:'Administração Geral e Pública: evolução, governança, funções administrativas.'},
-  {n:7, faseId:2, start:'2026-10-12', end:'2026-10-18', foco:'Controle Externo/Auditoria: instrumentos de fiscalização, tipos de auditoria.'},
-  {n:8, faseId:2, start:'2026-10-19', end:'2026-10-25', foco:'Controle Externo/Auditoria: jurisprudência do TCU por tema + revisão de Direito Administrativo.'},
-  {n:9, faseId:2, start:'2026-10-26', end:'2026-11-01', foco:'AFO aprofundado: LRF, Lei 4.320/1964, dívida pública.'},
-  {n:10, faseId:2, start:'2026-11-02', end:'2026-11-08', foco:'Revisão geral do núcleo + questões de fixação.'},
-  {n:11, faseId:3, start:'2026-11-09', end:'2026-11-15', foco:'Reforço final de Direito Administrativo e Controle Externo para o TCDF.'},
-  {n:12, faseId:3, start:'2026-11-16', end:'2026-11-22', foco:'Semana da prova do TCDF — comparecer sem meta de aprovação, só para sentir o Cebraspe na prática.', exam:'Prova do TCDF em 22/11'},
-  {n:13, faseId:3, start:'2026-11-23', end:'2026-11-29', foco:'Revisão pós-prova: ajustar o plano com base nas dificuldades sentidas no formato Certo/Errado.'},
-  {n:14, faseId:3, start:'2026-11-30', end:'2026-12-06', foco:'Retomar núcleo com foco no formato FCC: Contabilidade Pública, Gestão de Pessoas.'},
-  {n:15, faseId:3, start:'2026-12-07', end:'2026-12-13', foco:'Matemática/Raciocínio Lógico + Legislação institucional do TCE-GO (leitura literal).'},
-  {n:16, faseId:4, start:'2026-12-14', end:'2026-12-20', foco:'Simulado completo cronometrado (formato FCC) + revisão de erros.'},
-  {n:17, faseId:4, start:'2026-12-21', end:'2026-12-27', foco:'Revisão ativa da legislação institucional do TCE-GO + questões específicas.'},
-  {n:18, faseId:4, start:'2026-12-28', end:'2027-01-03', foco:'Simulado completo nº 2 + revisão de pontos fracos.'},
-  {n:19, faseId:4, start:'2027-01-04', end:'2027-01-10', foco:'Últimos ajustes: caderno de erros, ajuste de sono e rotina para o horário da prova.'},
-  {n:20, faseId:4, start:'2027-01-11', end:'2027-01-16', foco:'Reta final — sem conteúdo novo, só revisão leve. Confirmar local de prova.', exam:'Prova do TCE-GO em 17/01'},
-  {n:21, faseId:5, start:'2027-01-18', end:null, foco:'Sem prova confirmada — retomar construção do núcleo, aprofundar Controle Externo/Auditoria. Monitorar editais de CGU, TCE-SP, TCE-PB, TCE-RJ e TCU.'}
-];
+const $ = id => document.getElementById(id);
 
-const phases = [
-  {id:1, nome:'Fase 1 — Base', range:'31/08 a 27/09/2026', plataforma:'Estratégia Concursos'},
-  {id:2, nome:'Fase 2 — Construção ampla', range:'28/09 a 08/11/2026', plataforma:'Estratégia + TEC + Qconcursos (filtro Cebraspe)'},
-  {id:3, nome:'Fase 3 — Primeira prova real', range:'09/11 a 13/12/2026', plataforma:'Mesma base, foco na experiência do TCDF'},
-  {id:4, nome:'Fase 4 — Reta final TCE-GO', range:'14/12/2026 a 16/01/2027', plataforma:'Foco no formato FCC'},
-  {id:5, nome:'Fase 5 — Continuidade', range:'a partir de 18/01/2027', plataforma:'Estratégia + TEC + Qconcursos, contínuo'}
-];
+/* ---------- estado ---------------------------------------------------------- */
+function freshState(){
+  return { v:SCHEMA_VERSION, weeksDone:{}, nucleoDone:{}, dailyLog:{} };
+}
+function normalizeState(raw){
+  const s = freshState();
+  if(raw && typeof raw === 'object'){
+    if(raw.weeksDone  && typeof raw.weeksDone  === 'object') s.weeksDone  = raw.weeksDone;
+    if(raw.nucleoDone && typeof raw.nucleoDone === 'object') s.nucleoDone = raw.nucleoDone;
+    if(raw.dailyLog   && typeof raw.dailyLog   === 'object') s.dailyLog   = raw.dailyLog;
+  }
+  s.v = SCHEMA_VERSION; // ponto de migração para versões futuras
+  return s;
+}
 
-const nucleoCore = [
-  {id:'portugues', nome:'Língua Portuguesa', topicos:['Interpretação textual','Ortografia e crase','Coesão textual','Morfossintaxe','Concordância e regência','Reescrita de frases']},
-  {id:'constitucional', nome:'Direito Constitucional', topicos:['Princípios fundamentais','Aplicabilidade das normas','Direitos e garantias fundamentais','Organização do Estado','Fiscalização contábil, financeira e orçamentária']},
-  {id:'administrativo', nome:'Direito Administrativo', topicos:['Ato administrativo','Agentes públicos','Poderes da administração','Responsabilidade civil do Estado','Licitações — Lei 14.133/2021','Improbidade administrativa']},
-  {id:'afo', nome:'Administração Financeira e Orçamentária', topicos:['Orçamento público e ciclo orçamentário','PPA, LDO, LOA','Receita e despesa pública','Lei de Responsabilidade Fiscal','Lei 4.320/1964']},
-  {id:'admgeral', nome:'Administração Geral e Pública', topicos:['Evolução da administração','Governança pública','Funções administrativas','Ferramentas de gestão','Gestão de projetos']},
-  {id:'controle', nome:'Controle Externo / Auditoria', topicos:['Sistema constitucional de controle','Instrumentos de fiscalização','Tipos de auditoria','Jurisprudência do TCU por tema']}
-];
+let state = freshState();
 
-const nucleoExtra = [
-  {id:'contabilidade', nome:'Contabilidade Pública', topicos:['NBC TSP','MCASP','Plano de contas aplicado ao setor público']},
-  {id:'rh', nome:'Gestão de Pessoas', topicos:['Recrutamento e seleção','Avaliação de desempenho','Gestão por competências']},
-  {id:'raciocinio', nome:'Matemática e Raciocínio Lógico', topicos:['Estruturas lógicas','Lógica sentencial','Matemática financeira']},
-  {id:'tdcivtri', nome:'Previdenciário, Civil e Tributário', topicos:['Relevante apenas se for prestar o TCDF']},
-  {id:'dadosia', nome:'Análise de Dados, Estatística e IA', topicos:['Estatística descritiva','Visualização de dados','IA generativa aplicada']},
-  {id:'ingles', nome:'Língua Inglesa técnica', topicos:['Leitura técnica — ativar quando sair edital do TCU']}
-];
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) state = normalizeState(JSON.parse(raw));
+  }catch(e){
+    state = freshState();
+  }
+}
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){}
+}
 
-const platforms = [
-  {nome:'Estratégia Concursos', funcao:'Teoria, PDFs, edital verticalizado', ativarFase:1},
-  {nome:'TEC Concursos', funcao:'Filtro por banca, controle por incidência', ativarFase:2},
-  {nome:'Qconcursos', funcao:'Volume de questões, provas anteriores completas', ativarFase:2}
-];
-
-const keyDates = [
-  {label:'Isenção de taxa TCE-GO', data:'2026-09-10'},
-  {label:'Fim das inscrições do TCDF', data:'2026-09-17'},
-  {label:'Fim das inscrições do TCE-GO', data:'2026-11-06'},
-  {label:'Pagamento da taxa TCE-GO', data:'2026-11-09'},
-  {label:'Prova do TCDF', data:'2026-11-22', destaque:true},
-  {label:'Edital de convocação TCE-GO', data:'2026-12-11'},
-  {label:'Prova do TCE-GO', data:'2027-01-17', destaque:true},
-  {label:'Resultado preliminar TCE-GO', data:'2027-03-19'},
-  {label:'Resultado final TCE-GO', data:'2027-06-16'}
-];
-
-const opportunistic = [
-  {nome:'CGU', status:'Anunciado, edital até dez/2026 (não confirmado)'},
-  {nome:'TCE-SP', status:'Comissão formada, sem data'},
-  {nome:'TCE-PB', status:'Edital esperado, sem data certa'},
-  {nome:'TCE-RJ', status:'Previsto no orçamento 2027'},
-  {nome:'TCU', status:'Foco principal — o núcleo já é a preparação'}
-];
-
-const rotina = {
-  0:'Descanso ou revisão leve',
-  1:'Direito Administrativo + Licitações',
-  2:'Português + prática discursiva Cebraspe',
-  3:'Direito Constitucional + Controle Externo',
-  4:'AFO + Administração Geral e Pública',
-  5:'Complementares (rotativo)',
-  6:'Bateria de questões (Cebraspe) + discursiva FCC'
-};
-
-let state = {weeksDone:{}, nucleoDone:{}, dailyLog:{}};
-
+/* ---------- datas --------------------------------------------------------- */
 function todayMidnight(){
   const d = new Date();
   d.setHours(0,0,0,0);
   return d;
 }
 function parseDate(s){
-  const d = new Date(s + 'T00:00:00');
-  return d;
+  return new Date(s + 'T00:00:00');
 }
 function fmtBR(s){
-  const d = parseDate(s);
-  return d.toLocaleDateString('pt-BR');
+  return parseDate(s).toLocaleDateString('pt-BR');
 }
 function daysBetween(a,b){
   return Math.round((b-a)/86400000);
 }
 function isoDate(d){
-  return d.toISOString().slice(0,10);
+  return d.getFullYear() + '-'
+    + String(d.getMonth()+1).padStart(2,'0') + '-'
+    + String(d.getDate()).padStart(2,'0');
+}
+function ddmm(iso){
+  const p = iso.split('-');
+  return p[2] + '/' + p[1];
 }
 
-async function loadState(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      state = Object.assign({weeksDone:{}, nucleoDone:{}, dailyLog:{}}, parsed);
-    }
-  }catch(e){
-    state = {weeksDone:{}, nucleoDone:{}, dailyLog:{}};
-  }
-}
-async function saveState(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }catch(e){}
-}
-
+/* ---------- derivados do plano ------------------------------------------- */
+let _weekCache = null;
 function currentWeek(){
+  if(_weekCache) return _weekCache;
   const today = todayMidnight();
+  if(today < parseDate(weeks[0].start)) return (_weekCache = weeks[0]);
+  let cur = weeks[0];
   for(const w of weeks){
-    const start = parseDate(w.start);
-    const end = w.end ? parseDate(w.end) : null;
-    if(today >= start && (end === null || today <= end)) return w;
+    if(today >= parseDate(w.start)) cur = w; // última semana já iniciada; cobre lacunas entre semanas
   }
-  if(today < parseDate(weeks[0].start)) return weeks[0];
-  return weeks[weeks.length-1];
+  return (_weekCache = cur);
+}
+function weekExamLabel(w){
+  if(!w.examId) return '';
+  const ex = exams.find(e => e.id === w.examId);
+  return ex ? 'Prova do ' + ex.nome + ' em ' + ddmm(ex.data) : '';
 }
 
+/* ---------- render ------------------------------------------------------- */
 function renderCountdowns(){
   const today = todayMidnight();
-  const tcdf = parseDate('2026-11-22');
-  const tcego = parseDate('2027-01-17');
-  const items = [
-    {nome:'TCDF', date:tcdf, dateStr:'22/11/2026'},
-    {nome:'TCE-GO', date:tcego, dateStr:'17/01/2027'}
-  ];
-  const html = items.map(it=>{
-    const diff = daysBetween(today, it.date);
-    let daysTxt, unitTxt;
-    if(diff > 0){ daysTxt = diff; unitTxt = diff===1?'dia':'dias'; }
-    else if(diff === 0){ daysTxt = 'hoje'; unitTxt=''; }
-    else { daysTxt = 'realizada'; unitTxt=''; }
+  const html = exams.map(ex => {
+    const diff = daysBetween(today, parseDate(ex.data));
+    let daysTxt, unitTxt = '';
+    if(diff > 0){ daysTxt = diff; unitTxt = diff === 1 ? 'dia' : 'dias'; }
+    else if(diff === 0){ daysTxt = 'hoje'; }
+    else { daysTxt = 'realizada'; }
     return '<div class="countdown-card">'
-      + '<p class="label">' + it.nome + '</p>'
-      + '<p class="days">' + daysTxt + (unitTxt ? '<span> '+unitTxt+'</span>' : '') + '</p>'
-      + '<p class="date">' + it.dateStr + '</p>'
+      + '<p class="label">' + ex.nome + '</p>'
+      + '<p class="days">' + daysTxt + (unitTxt ? '<span> ' + unitTxt + '</span>' : '') + '</p>'
+      + '<p class="date">' + fmtBR(ex.data) + '</p>'
       + '</div>';
   }).join('');
-  document.getElementById('countdownRow').innerHTML = html;
+  $('countdownRow').innerHTML = html;
 }
 
 function renderPainel(){
   const w = currentWeek();
-  const phase = phases.find(p=>p.id===w.faseId);
+  const phase = phases.find(p => p.id === w.faseId);
   const today = todayMidnight();
 
-  document.getElementById('faseAtualCard').innerHTML =
+  $('faseAtualCard').innerHTML =
     '<span class="tag">fase atual</span>'
     + '<h2>' + phase.nome + '</h2>'
     + '<p class="muted">' + phase.range + ' — semana ' + w.n + '</p>';
 
-  document.getElementById('focoSemanaCard').innerHTML =
+  const exLabel = weekExamLabel(w);
+  $('focoSemanaCard').innerHTML =
     '<h3>Foco desta semana</h3>'
     + '<p>' + w.foco + '</p>'
-    + (w.exam ? '<p class="tag success">' + w.exam + '</p>' : '');
+    + (exLabel ? '<p class="tag success">' + exLabel + '</p>' : '');
 
   const dow = today.getDay();
   const isoToday = isoDate(today);
   const done = !!state.dailyLog[isoToday];
 
-  let streakHtml = '<div class="streak">';
-  for(let i=6;i>=0;i--){
+  let streakHtml = '<div class="streak" role="img" aria-label="Últimos 7 dias">';
+  for(let i = 6; i >= 0; i--){
     const d = new Date(today);
-    d.setDate(d.getDate()-i);
+    d.setDate(d.getDate() - i);
     const key = isoDate(d);
     const cls = state.dailyLog[key] ? 'dot done' : 'dot';
-    streakHtml += '<div class="'+cls+'" title="'+d.toLocaleDateString('pt-BR')+'"></div>';
+    streakHtml += '<div class="' + cls + '" title="' + d.toLocaleDateString('pt-BR') + '"></div>';
   }
   streakHtml += '</div>';
 
-  document.getElementById('hojeCard').innerHTML =
+  $('hojeCard').innerHTML =
     '<h3>Rotina de hoje</h3>'
     + '<div class="today-line">'
     + '<div class="txt"><strong>' + rotina[dow] + '</strong><span class="muted">' + today.toLocaleDateString('pt-BR', {weekday:'long'}) + '</span></div>'
-    + '<button class="check-btn' + (done?' done':'') + '" id="todayCheckBtn">' + (done ? 'Estudado hoje' : 'Marcar como estudado') + '</button>'
+    + '<button type="button" class="check-btn' + (done ? ' done' : '') + '" id="todayCheckBtn">' + (done ? 'Estudado hoje' : 'Marcar como estudado') + '</button>'
     + '</div>'
     + streakHtml;
 
-  document.getElementById('todayCheckBtn').addEventListener('click', async ()=>{
-    state.dailyLog[isoToday] = !state.dailyLog[isoToday];
-    await saveState();
-    renderPainel();
+  $('todayCheckBtn').addEventListener('click', () => {
+    if(state.dailyLog[isoToday]) delete state.dailyLog[isoToday];
+    else state.dailyLog[isoToday] = true;
+    saveState();
+    renderAll();
   });
 
-  document.getElementById('plataformaAtivaCard').innerHTML =
+  $('plataformaAtivaCard').innerHTML =
     '<h3>Plataforma ativa nesta fase</h3>'
     + '<p class="muted">' + phase.plataforma + '</p>';
 }
 
+function renderHeatmap(){
+  const planStart = parseDate(weeks[0].start);
+  const closedEnds = weeks.filter(w => w.end).map(w => parseDate(w.end)).sort((a,b) => b - a);
+  const planEnd = closedEnds[0];
+  const today = todayMidnight();
+  const rangeEnd = today > planEnd ? today : planEnd;
+
+  const gridStart = new Date(planStart);
+  gridStart.setDate(gridStart.getDate() - gridStart.getDay()); // recua até domingo
+
+  let doneTotal = 0, dayTotal = 0, cells = '';
+  const d = new Date(gridStart);
+  while(d <= rangeEnd){
+    const iso = isoDate(d);
+    const inRange = d >= planStart && d <= rangeEnd;
+    const done = !!state.dailyLog[iso];
+    if(inRange){ dayTotal++; if(done) doneTotal++; }
+    let cls = 'hm-cell';
+    if(!inRange) cls += ' out';
+    else if(done) cls += ' done';
+    cells += '<div class="' + cls + '" title="' + d.toLocaleDateString('pt-BR') + (done ? ' — estudado' : '') + '"></div>';
+    d.setDate(d.getDate() + 1);
+  }
+
+  const grid = $('heatmapGrid');
+  grid.innerHTML = cells;
+  grid.setAttribute('aria-label', 'Mapa de constância: ' + doneTotal + ' de ' + dayTotal + ' dias estudados desde o início do plano');
+  $('heatmapLabel').textContent = doneTotal + (doneTotal === 1 ? ' dia estudado' : ' dias estudados');
+}
+
 function weeksProgress(){
-  const total = weeks.length - 1;
-  const doneCount = weeks.slice(0,total).filter(w=>state.weeksDone[w.n]).length;
-  return {doneCount, total};
+  const closed = weeks.filter(w => w.end);
+  const doneCount = closed.filter(w => state.weeksDone[w.n]).length;
+  return { doneCount, total: closed.length };
 }
 
 function renderCronograma(){
-  const {doneCount, total} = weeksProgress();
-  const pct = Math.round((doneCount/total)*100);
-  document.getElementById('weeksProgressBar').style.width = pct + '%';
-  document.getElementById('weeksProgressLabel').textContent = doneCount + ' de ' + total + ' semanas concluídas (' + pct + '%)';
+  const { doneCount, total } = weeksProgress();
+  const pct = Math.round((doneCount / total) * 100);
+  $('weeksProgressBar').style.width = pct + '%';
+  $('weeksProgressLabel').textContent = doneCount + ' de ' + total + ' semanas concluídas (' + pct + '%)';
 
+  const curN = currentWeek().n;
   let html = '';
   for(const phase of phases){
-    const phaseWeeks = weeks.filter(w=>w.faseId===phase.id);
+    const phaseWeeks = weeks.filter(w => w.faseId === phase.id);
     let rows = '';
     for(const w of phaseWeeks){
       const checked = !!state.weeksDone[w.n];
-      const rangeTxt = w.end ? (fmtBR(w.start)+' a '+fmtBR(w.end)) : (fmtBR(w.start)+' em diante');
-      rows += '<tr>'
+      const rangeTxt = w.end ? (fmtBR(w.start) + ' a ' + fmtBR(w.end)) : (fmtBR(w.start) + ' em diante');
+      const exLabel = weekExamLabel(w);
+      const isCur = w.n === curN;
+      rows += '<tr class="' + (isCur ? 'current-week' : '') + '"' + (isCur ? ' aria-current="true"' : '') + '>'
         + '<td class="week-num">' + w.n + '</td>'
         + '<td class="week-range">' + rangeTxt + '</td>'
-        + '<td class="week-focus">' + w.foco + (w.exam ? '<span class="exam">'+w.exam+'</span>' : '') + '</td>'
-        + '<td class="week-check">' + (w.end ? '<input type="checkbox" data-week="'+w.n+'" '+(checked?'checked':'')+'>' : '') + '</td>'
+        + '<td class="week-focus">' + w.foco
+          + (exLabel ? '<span class="exam">' + exLabel + '</span>' : '')
+          + (isCur ? '<span class="now-chip">agora</span>' : '')
+        + '</td>'
+        + '<td class="week-check">' + (w.end ? '<input type="checkbox" data-week="' + w.n + '" aria-label="Marcar semana ' + w.n + ' como concluída" ' + (checked ? 'checked' : '') + '>' : '') + '</td>'
         + '</tr>';
     }
     html += '<div class="phase-block">'
@@ -664,60 +730,62 @@ function renderCronograma(){
       + '<table class="week-table"><tbody>' + rows + '</tbody></table>'
       + '</div>';
   }
-  document.getElementById('phasesContainer').innerHTML = html;
+  $('phasesContainer').innerHTML = html;
 
-  document.querySelectorAll('#phasesContainer input[type=checkbox]').forEach(cb=>{
-    cb.addEventListener('change', async (e)=>{
-      const n = e.target.getAttribute('data-week');
-      state.weeksDone[n] = e.target.checked;
-      await saveState();
-      renderCronograma();
+  document.querySelectorAll('#phasesContainer input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', e => {
+      const n = Number(e.target.getAttribute('data-week'));
+      if(e.target.checked) state.weeksDone[n] = true;
+      else delete state.weeksDone[n];
+      saveState();
+      renderAll();
     });
   });
 }
 
 function nucleoProgress(){
   const all = [...nucleoCore, ...nucleoExtra];
-  const doneCount = all.filter(item=>state.nucleoDone[item.id]).length;
-  return {doneCount, total:all.length};
+  const doneCount = all.filter(item => state.nucleoDone[item.id]).length;
+  return { doneCount, total: all.length };
 }
 
 function renderNucleoList(containerId, list, coreLabel){
-  const html = list.map(item=>{
+  const html = list.map(item => {
     const checked = !!state.nucleoDone[item.id];
     return '<div class="nucleo-item">'
       + '<div class="row">'
-      + '<input type="checkbox" id="nuc-'+item.id+'" data-nucleo="'+item.id+'" '+(checked?'checked':'')+'>'
-      + '<label for="nuc-'+item.id+'">' + item.nome + '</label>'
+      + '<input type="checkbox" id="nuc-' + item.id + '" data-nucleo="' + item.id + '" ' + (checked ? 'checked' : '') + '>'
+      + '<label for="nuc-' + item.id + '">' + item.nome + '</label>'
       + (coreLabel ? '<span class="core-badge">núcleo</span>' : '')
       + '</div>'
       + '<p class="topicos">' + item.topicos.join(' · ') + '</p>'
       + '</div>';
   }).join('');
-  document.getElementById(containerId).innerHTML = html;
+  $(containerId).innerHTML = html;
 
-  document.querySelectorAll('#'+containerId+' input[type=checkbox]').forEach(cb=>{
-    cb.addEventListener('change', async (e)=>{
+  document.querySelectorAll('#' + containerId + ' input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', e => {
       const id = e.target.getAttribute('data-nucleo');
-      state.nucleoDone[id] = e.target.checked;
-      await saveState();
-      renderNucleo();
+      if(e.target.checked) state.nucleoDone[id] = true;
+      else delete state.nucleoDone[id];
+      saveState();
+      renderAll();
     });
   });
 }
 
 function renderNucleo(){
-  const {doneCount, total} = nucleoProgress();
-  const pct = Math.round((doneCount/total)*100);
-  document.getElementById('nucleoProgressBar').style.width = pct + '%';
-  document.getElementById('nucleoProgressLabel').textContent = doneCount + ' de ' + total + ' disciplinas com base concluída (' + pct + '%)';
+  const { doneCount, total } = nucleoProgress();
+  const pct = Math.round((doneCount / total) * 100);
+  $('nucleoProgressBar').style.width = pct + '%';
+  $('nucleoProgressLabel').textContent = doneCount + ' de ' + total + ' disciplinas com base concluída (' + pct + '%)';
   renderNucleoList('nucleoCoreList', nucleoCore, true);
   renderNucleoList('nucleoExtraList', nucleoExtra, false);
 }
 
 function renderPlataformas(){
   const w = currentWeek();
-  const html = platforms.map(p=>{
+  const html = platforms.map(p => {
     const active = w.faseId >= p.ativarFase;
     return '<tr>'
       + '<td>' + p.nome + '</td>'
@@ -725,56 +793,139 @@ function renderPlataformas(){
       + '<td>' + (active ? '<span class="active-flag">ativa</span>' : '<span class="muted">ainda não</span>') + '</td>'
       + '</tr>';
   }).join('');
-  document.getElementById('platBody').innerHTML = html;
+  $('platBody').innerHTML = html;
 }
 
 function renderDatas(){
   const today = todayMidnight();
-  const rows = keyDates.map(d=>{
-    const date = parseDate(d.data);
-    const diff = daysBetween(today, date);
+  const rows = keyDates.map(d => {
+    const diff = daysBetween(today, parseDate(d.data));
     let remTxt;
-    if(diff > 0) remTxt = 'faltam ' + diff + (diff===1?' dia':' dias');
+    if(diff > 0) remTxt = 'faltam ' + diff + (diff === 1 ? ' dia' : ' dias');
     else if(diff === 0) remTxt = 'é hoje';
     else remTxt = 'já ocorreu';
     return '<tr>'
       + '<td class="d">' + fmtBR(d.data) + '</td>'
-      + '<td class="lbl' + (d.destaque?' destaque':'') + '">' + d.label + '</td>'
+      + '<td class="lbl' + (d.destaque ? ' destaque' : '') + '">' + d.label + '</td>'
       + '<td class="rem">' + remTxt + '</td>'
       + '</tr>';
   }).join('');
-  document.getElementById('datesTable').innerHTML = rows;
+  $('datesTable').innerHTML = rows;
 
-  const oppHtml = opportunistic.map(o=>
+  $('opportunisticList').innerHTML = opportunistic.map(o =>
     '<div class="opp-item"><span class="name">' + o.nome + '</span><span class="status">' + o.status + '</span></div>'
   ).join('');
-  document.getElementById('opportunisticList').innerHTML = oppHtml;
 }
 
-function setupTabs(){
-  const buttons = document.querySelectorAll('#tabs button');
-  buttons.forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      buttons.forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      document.querySelectorAll('section.panel').forEach(p=>p.classList.remove('active'));
-      document.getElementById('panel-'+btn.getAttribute('data-tab')).classList.add('active');
-    });
-  });
-}
-
-async function init(){
-  await loadState();
+function renderAll(){
+  _weekCache = null;
   renderCountdowns();
   renderPainel();
+  renderHeatmap();
   renderCronograma();
   renderNucleo();
   renderPlataformas();
   renderDatas();
-  setupTabs();
 }
 
-init();
+/* ---------- abas (com teclado) ----------------------------------------- */
+function setupTabs(){
+  const tabs = [...document.querySelectorAll('#tabs [role=tab]')];
+  function select(btn){
+    tabs.forEach(b => {
+      const on = b === btn;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+      const panel = $('panel-' + b.dataset.tab);
+      panel.classList.toggle('active', on);
+      panel.hidden = !on;
+    });
+  }
+  tabs.forEach((btn, i) => {
+    btn.addEventListener('click', () => select(btn));
+    btn.addEventListener('keydown', e => {
+      if(e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const dir = e.key === 'ArrowRight' ? 1 : -1;
+      const next = tabs[(i + dir + tabs.length) % tabs.length];
+      next.focus();
+      select(next);
+    });
+  });
+}
+
+/* ---------- backup: exportar / importar / resetar --------------------- */
+function backupMsg(txt){
+  $('backupMsg').textContent = txt || '';
+}
+function exportData(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'painel-estudos-backup-' + isoDate(todayMidnight()) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  backupMsg('Backup exportado.');
+}
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      const looksLikeState = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        && ['weeksDone','nucleoDone','dailyLog'].some(k => parsed[k] && typeof parsed[k] === 'object');
+      if(!looksLikeState) throw new Error('shape');
+      state = normalizeState(parsed);
+      saveState();
+      renderAll();
+      backupMsg('Progresso importado.');
+    }catch(e){
+      backupMsg('Arquivo inválido — nada foi alterado.');
+    }
+  };
+  reader.onerror = () => backupMsg('Não foi possível ler o arquivo.');
+  reader.readAsText(file);
+}
+function resetData(){
+  if(!confirm('Isso apaga todo o progresso salvo neste navegador. Continuar?')) return;
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  state = freshState();
+  renderAll();
+  backupMsg('Progresso zerado.');
+}
+function setupBackup(){
+  $('exportBtn').addEventListener('click', exportData);
+  $('resetBtn').addEventListener('click', resetData);
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    if(file) importData(file);
+    e.target.value = '';
+  });
+}
+
+/* ---------- init ------------------------------------------------------- */
+function init(){
+  loadState();
+  renderAll();
+  setupTabs();
+  setupBackup();
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+}
+
+try{
+  init();
+}catch(e){
+  console.error(e);
+}
 </script>
 </body>
 </html>
