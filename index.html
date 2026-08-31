@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de estudos — Controle Externo</title>
+<meta name="description" content="Painel pessoal de acompanhamento do plano de estudos para concursos da área de controle externo (foco TCU).">
+<meta name="theme-color" content="#7A2530">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Painel Controle Externo">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEEEE6;
+    --card:#FBFAF5;
+    --ink:#202A3B;
+    --ink-soft:#57606F;
+    --ink-faint:#8B92A0;
+    --accent:#7A2530;
+    --accent-soft:#F1E1E0;
+    --success:#2F6B4F;
+    --success-soft:#E1EBE3;
+    --line:#D9D5C7;
+    --line-strong:#C3BEAC;
+    --radius-sm:4px;
+    --radius-md:6px;
+    --font-display:'Fraunces', serif;
+    --font-body:'IBM Plex Sans', -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.5;
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:880px;margin:0 auto;}
+
+  header.top{margin-bottom:28px;}
+  header.top .kicker{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--ink-faint);
+    letter-spacing:0.02em;
+    margin:0 0 6px;
+  }
+  header.top h1{
+    font-family:var(--font-display);
+    font-weight:500;
+    font-size:30px;
+    margin:0;
+    color:var(--ink);
+  }
+  header.top p.sub{
+    color:var(--ink-soft);
+    margin:8px 0 0;
+    font-size:15px;
+    max-width:520px;
+  }
+
+  .countdown-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin:24px 0 8px;
+  }
+  .countdown-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--accent);
+    border-radius:0;
+    padding:14px 16px;
+  }
+  .countdown-card .label{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0 0 6px;
+  }
+  .countdown-card .days{
+    font-family:var(--font-mono);
+    font-size:32px;
+    font-weight:500;
+    color:var(--ink);
+    line-height:1;
+  }
+  .countdown-card .days span{font-size:14px;color:var(--ink-soft);font-weight:400;margin-left:6px;}
+  .countdown-card .date{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--ink-faint);
+    margin-top:6px;
+  }
+
+  nav.tabs{
+    display:flex;
+    gap:2px;
+    border-bottom:1px solid var(--line-strong);
+    margin:28px 0 24px;
+    overflow-x:auto;
+  }
+  nav.tabs button{
+    font-family:var(--font-body);
+    font-size:14px;
+    font-weight:500;
+    color:var(--ink-soft);
+    background:transparent;
+    border:none;
+    border-bottom:2px solid transparent;
+    padding:10px 14px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  nav.tabs button:hover{color:var(--ink);}
+  nav.tabs button.active{
+    color:var(--accent);
+    border-bottom:2px solid var(--accent);
+  }
+  nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+
+  section.panel{display:none;}
+  section.panel.active{display:block;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:18px 20px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-family:var(--font-display);
+    font-weight:500;
+    font-size:18px;
+    margin:0 0 12px;
+  }
+  .card h3{
+    font-size:14px;
+    font-weight:600;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .muted{color:var(--ink-soft);font-size:14px;}
+  .tag{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--accent);
+    background:var(--accent-soft);
+    padding:2px 8px;
+    border-radius:var(--radius-sm);
+    margin-bottom:8px;
+  }
+  .tag.success{color:var(--success);background:var(--success-soft);}
+
+  .today-line{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 0;
+    border-top:1px solid var(--line);
+  }
+  .today-line:first-of-type{border-top:none;padding-top:0;}
+  .today-line .txt{font-size:14px;}
+  .today-line .txt strong{display:block;font-size:15px;margin-bottom:2px;}
+
+  button.check-btn{
+    font-family:var(--font-body);
+    font-size:13px;
+    font-weight:500;
+    padding:7px 14px;
+    border:1px solid var(--line-strong);
+    background:var(--card);
+    color:var(--ink);
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+  }
+  button.check-btn:hover{border-color:var(--accent);}
+  button.check-btn.done{
+    background:var(--success-soft);
+    border-color:var(--success);
+    color:var(--success);
+  }
+
+  .streak{display:flex;gap:5px;margin-top:10px;}
+  .streak .dot{
+    width:14px;height:14px;
+    border:1px solid var(--line-strong);
+    border-radius:2px;
+  }
+  .streak .dot.done{background:var(--success);border-color:var(--success);}
+
+  .progress-bar{
+    height:6px;
+    background:var(--line);
+    border-radius:3px;
+    overflow:hidden;
+    margin:10px 0 4px;
+  }
+  .progress-bar > div{height:100%;background:var(--accent);}
+  .progress-label{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);}
+
+  .phase-block{margin-bottom:22px;}
+  .phase-header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    padding-bottom:8px;
+    margin-bottom:10px;
+    border-bottom:1px solid var(--line-strong);
+  }
+  .phase-header h3{font-size:16px;margin:0;font-family:var(--font-display);font-weight:500;}
+  .phase-header .range{font-family:var(--font-mono);font-size:12px;color:var(--ink-faint);}
+
+  table.week-table{width:100%;border-collapse:collapse;font-size:13px;}
+  table.week-table td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table.week-table tr:last-child td{border-bottom:none;}
+  .week-num{
+    font-family:var(--font-mono);
+    color:var(--ink-faint);
+    width:26px;
+    white-space:nowrap;
+  }
+  .week-range{
+    font-family:var(--font-mono);
+    color:var(--ink-soft);
+    width:110px;
+    white-space:nowrap;
+  }
+  .week-focus{color:var(--ink);}
+  .week-focus .exam{
+    display:inline-block;
+    margin-top:4px;
+    font-size:12px;
+    color:var(--accent);
+    font-weight:500;
+  }
+  .week-check{width:28px;text-align:center;}
+  input[type=checkbox]{
+    width:16px;height:16px;
+    accent-color:var(--success);
+    cursor:pointer;
+  }
+
+  .nucleo-item{
+    border-bottom:1px solid var(--line);
+    padding:12px 0;
+  }
+  .nucleo-item:last-child{border-bottom:none;}
+  .nucleo-item .row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .nucleo-item label{
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    flex:1;
+  }
+  .nucleo-item .topicos{
+    margin:6px 0 0 26px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .core-badge{
+    font-family:var(--font-mono);
+    font-size:10px;
+    color:var(--accent);
+    border:1px solid var(--accent);
+    padding:1px 6px;
+    border-radius:var(--radius-sm);
+  }
+
+  table.plat-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px;}
+  table.plat-table th{
+    text-align:left;
+    font-size:12px;
+    color:var(--ink-faint);
+    font-weight:500;
+    padding:0 8px 8px 0;
+    border-bottom:1px solid var(--line-strong);
+  }
+  table.plat-table td{
+    padding:10px 8px 10px 0;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  .active-flag{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--success);
+    background:var(--success-soft);
+    padding:2px 7px;
+    border-radius:var(--radius-sm);
+  }
+
+  table.dates-table{width:100%;border-collapse:collapse;font-size:14px;}
+  table.dates-table td{padding:10px 8px;border-bottom:1px solid var(--line);}
+  .dates-table tr:last-child td{border-bottom:none;}
+  .dates-table .d{font-family:var(--font-mono);color:var(--ink-soft);width:100px;white-space:nowrap;}
+  .dates-table .lbl.destaque{font-weight:600;color:var(--accent);}
+  .dates-table .rem{font-family:var(--font-mono);font-size:12px;color:var(--ink-faint);text-align:right;white-space:nowrap;}
+
+  .opp-item{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .opp-item:last-child{border-bottom:none;}
+  .opp-item .name{font-weight:600;}
+  .opp-item .status{color:var(--ink-soft);text-align:right;}
+
+  footer.note{
+    margin-top:32px;
+    font-size:12px;
+    color:var(--ink-faint);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+
+  @media (max-width:520px){
+    .countdown-row{grid-template-columns:1fr;}
+    table.week-table .week-range{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">painel pessoal de estudos</p>
+    <h1>Controle externo — foco TCU</h1>
+    <p class="sub">Acompanhamento do plano de estudos com TCDF e TCE-GO como provas de rodagem. Carga de 2h por dia.</p>
+  </header>
+
+  <div class="countdown-row" id="countdownRow"></div>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="painel" class="active">Painel</button>
+    <button data-tab="cronograma">Cronograma</button>
+    <button data-tab="nucleo">Núcleo de conteúdo</button>
+    <button data-tab="plataformas">Plataformas</button>
+    <button data-tab="datas">Datas</button>
+  </nav>
+
+  <section class="panel active" id="panel-painel">
+    <div class="card" id="faseAtualCard"></div>
+    <div class="card" id="focoSemanaCard"></div>
+    <div class="card" id="hojeCard"></div>
+    <div class="card" id="plataformaAtivaCard"></div>
+  </section>
+
+  <section class="panel" id="panel-cronograma">
+    <div class="card">
+      <h2>Progresso do cronograma</h2>
+      <div class="progress-bar"><div id="weeksProgressBar" style="width:0%"></div></div>
+      <p class="progress-label" id="weeksProgressLabel"></p>
+    </div>
+    <div id="phasesContainer"></div>
+  </section>
+
+  <section class="panel" id="panel-nucleo">
+    <div class="card">
+      <h2>Progresso do núcleo</h2>
+      <div class="progress-bar"><div id="nucleoProgressBar" style="width:0%"></div></div>
+      <p class="progress-label" id="nucleoProgressLabel"></p>
+    </div>
+    <div class="card">
+      <h3>Núcleo comum (prioridade máxima)</h3>
+      <div id="nucleoCoreList"></div>
+    </div>
+    <div class="card">
+      <h3>Complementares (depois do núcleo sólido)</h3>
+      <div id="nucleoExtraList"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-plataformas">
+    <div class="card">
+      <h2>Como usar cada plataforma</h2>
+      <table class="plat-table">
+        <thead><tr><th>Plataforma</th><th>Função</th><th>Status</th></tr></thead>
+        <tbody id="platBody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Regra de ouro</h3>
+      <p class="muted">Como o TCU é o foco mas não tem edital, a maior parte do treino de questões deve ser filtrada por banca Cebraspe, não por concurso — isso já serve automaticamente de treino para o TCDF e qualquer outro federal ou distrital.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-datas">
+    <div class="card">
+      <h2>Calendário consolidado</h2>
+      <table class="dates-table" id="datesTable"></table>
+    </div>
+    <div class="card">
+      <h2>Provas oportunistas — sem estudo específico</h2>
+      <p class="muted">Você comparece a esses concursos com o que o núcleo comum já entrega. Se passar, ótimo; se não, foi treino de prova real de graça.</p>
+      <div id="opportunisticList" style="margin-top:10px;"></div>
+    </div>
+  </section>
+
+  <footer class="note">
+    Plano vivo — revise mensalmente conforme novos editais da área de controle forem anunciados. Progresso salvo automaticamente neste navegador.
+  </footer>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'controle-externo-progress';
+
+const weeks = [
+  {n:1, faseId:1, start:'2026-08-31', end:'2026-09-06', foco:'Diagnóstico: reunir PDFs de legislação, montar caderno de erros, configurar Estratégia Concursos. Iniciar Português e Direito Administrativo (conceitos-base).'},
+  {n:2, faseId:1, start:'2026-09-07', end:'2026-09-13', foco:'Direito Constitucional (conceitos-base) + continuar Português.'},
+  {n:3, faseId:1, start:'2026-09-14', end:'2026-09-20', foco:'Direito Administrativo: ato administrativo, agentes públicos, poderes da administração.'},
+  {n:4, faseId:1, start:'2026-09-21', end:'2026-09-27', foco:'AFO: orçamento público, ciclo orçamentário, PPA, LDO, LOA.'},
+  {n:5, faseId:2, start:'2026-09-28', end:'2026-10-04', foco:'Licitações — Lei 14.133/2021 completa.'},
+  {n:6, faseId:2, start:'2026-10-05', end:'2026-10-11', foco:'Administração Geral e Pública: evolução, governança, funções administrativas.'},
+  {n:7, faseId:2, start:'2026-10-12', end:'2026-10-18', foco:'Controle Externo/Auditoria: instrumentos de fiscalização, tipos de auditoria.'},
+  {n:8, faseId:2, start:'2026-10-19', end:'2026-10-25', foco:'Controle Externo/Auditoria: jurisprudência do TCU por tema + revisão de Direito Administrativo.'},
+  {n:9, faseId:2, start:'2026-10-26', end:'2026-11-01', foco:'AFO aprofundado: LRF, Lei 4.320/1964, dívida pública.'},
+  {n:10, faseId:2, start:'2026-11-02', end:'2026-11-08', foco:'Revisão geral do núcleo + questões de fixação.'},
+  {n:11, faseId:3, start:'2026-11-09', end:'2026-11-15', foco:'Reforço final de Direito Administrativo e Controle Externo para o TCDF.'},
+  {n:12, faseId:3, start:'2026-11-16', end:'2026-11-22', foco:'Semana da prova do TCDF — comparecer sem meta de aprovação, só para sentir o Cebraspe na prática.', exam:'Prova do TCDF em 22/11'},
+  {n:13, faseId:3, start:'2026-11-23', end:'2026-11-29', foco:'Revisão pós-prova: ajustar o plano com base nas dificuldades sentidas no formato Certo/Errado.'},
+  {n:14, faseId:3, start:'2026-11-30', end:'2026-12-06', foco:'Retomar núcleo com foco no formato FCC: Contabilidade Pública, Gestão de Pessoas.'},
+  {n:15, faseId:3, start:'2026-12-07', end:'2026-12-13', foco:'Matemática/Raciocínio Lógico + Legislação institucional do TCE-GO (leitura literal).'},
+  {n:16, faseId:4, start:'2026-12-14', end:'2026-12-20', foco:'Simulado completo cronometrado (formato FCC) + revisão de erros.'},
+  {n:17, faseId:4, start:'2026-12-21', end:'2026-12-27', foco:'Revisão ativa da legislação institucional do TCE-GO + questões específicas.'},
+  {n:18, faseId:4, start:'2026-12-28', end:'2027-01-03', foco:'Simulado completo nº 2 + revisão de pontos fracos.'},
+  {n:19, faseId:4, start:'2027-01-04', end:'2027-01-10', foco:'Últimos ajustes: caderno de erros, ajuste de sono e rotina para o horário da prova.'},
+  {n:20, faseId:4, start:'2027-01-11', end:'2027-01-16', foco:'Reta final — sem conteúdo novo, só revisão leve. Confirmar local de prova.', exam:'Prova do TCE-GO em 17/01'},
+  {n:21, faseId:5, start:'2027-01-18', end:null, foco:'Sem prova confirmada — retomar construção do núcleo, aprofundar Controle Externo/Auditoria. Monitorar editais de CGU, TCE-SP, TCE-PB, TCE-RJ e TCU.'}
+];
+
+const phases = [
+  {id:1, nome:'Fase 1 — Base', range:'31/08 a 27/09/2026', plataforma:'Estratégia Concursos'},
+  {id:2, nome:'Fase 2 — Construção ampla', range:'28/09 a 08/11/2026', plataforma:'Estratégia + TEC + Qconcursos (filtro Cebraspe)'},
+  {id:3, nome:'Fase 3 — Primeira prova real', range:'09/11 a 13/12/2026', plataforma:'Mesma base, foco na experiência do TCDF'},
+  {id:4, nome:'Fase 4 — Reta final TCE-GO', range:'14/12/2026 a 16/01/2027', plataforma:'Foco no formato FCC'},
+  {id:5, nome:'Fase 5 — Continuidade', range:'a partir de 18/01/2027', plataforma:'Estratégia + TEC + Qconcursos, contínuo'}
+];
+
+const nucleoCore = [
+  {id:'portugues', nome:'Língua Portuguesa', topicos:['Interpretação textual','Ortografia e crase','Coesão textual','Morfossintaxe','Concordância e regência','Reescrita de frases']},
+  {id:'constitucional', nome:'Direito Constitucional', topicos:['Princípios fundamentais','Aplicabilidade das normas','Direitos e garantias fundamentais','Organização do Estado','Fiscalização contábil, financeira e orçamentária']},
+  {id:'administrativo', nome:'Direito Administrativo', topicos:['Ato administrativo','Agentes públicos','Poderes da administração','Responsabilidade civil do Estado','Licitações — Lei 14.133/2021','Improbidade administrativa']},
+  {id:'afo', nome:'Administração Financeira e Orçamentária', topicos:['Orçamento público e ciclo orçamentário','PPA, LDO, LOA','Receita e despesa pública','Lei de Responsabilidade Fiscal','Lei 4.320/1964']},
+  {id:'admgeral', nome:'Administração Geral e Pública', topicos:['Evolução da administração','Governança pública','Funções administrativas','Ferramentas de gestão','Gestão de projetos']},
+  {id:'controle', nome:'Controle Externo / Auditoria', topicos:['Sistema constitucional de controle','Instrumentos de fiscalização','Tipos de auditoria','Jurisprudência do TCU por tema']}
+];
+
+const nucleoExtra = [
+  {id:'contabilidade', nome:'Contabilidade Pública', topicos:['NBC TSP','MCASP','Plano de contas aplicado ao setor público']},
+  {id:'rh', nome:'Gestão de Pessoas', topicos:['Recrutamento e seleção','Avaliação de desempenho','Gestão por competências']},
+  {id:'raciocinio', nome:'Matemática e Raciocínio Lógico', topicos:['Estruturas lógicas','Lógica sentencial','Matemática financeira']},
+  {id:'tdcivtri', nome:'Previdenciário, Civil e Tributário', topicos:['Relevante apenas se for prestar o TCDF']},
+  {id:'dadosia', nome:'Análise de Dados, Estatística e IA', topicos:['Estatística descritiva','Visualização de dados','IA generativa aplicada']},
+  {id:'ingles', nome:'Língua Inglesa técnica', topicos:['Leitura técnica — ativar quando sair edital do TCU']}
+];
+
+const platforms = [
+  {nome:'Estratégia Concursos', funcao:'Teoria, PDFs, edital verticalizado', ativarFase:1},
+  {nome:'TEC Concursos', funcao:'Filtro por banca, controle por incidência', ativarFase:2},
+  {nome:'Qconcursos', funcao:'Volume de questões, provas anteriores completas', ativarFase:2}
+];
+
+const keyDates = [
+  {label:'Isenção de taxa TCE-GO', data:'2026-09-10'},
+  {label:'Fim das inscrições do TCDF', data:'2026-09-17'},
+  {label:'Fim das inscrições do TCE-GO', data:'2026-11-06'},
+  {label:'Pagamento da taxa TCE-GO', data:'2026-11-09'},
+  {label:'Prova do TCDF', data:'2026-11-22', destaque:true},
+  {label:'Edital de convocação TCE-GO', data:'2026-12-11'},
+  {label:'Prova do TCE-GO', data:'2027-01-17', destaque:true},
+  {label:'Resultado preliminar TCE-GO', data:'2027-03-19'},
+  {label:'Resultado final TCE-GO', data:'2027-06-16'}
+];
+
+const opportunistic = [
+  {nome:'CGU', status:'Anunciado, edital até dez/2026 (não confirmado)'},
+  {nome:'TCE-SP', status:'Comissão formada, sem data'},
+  {nome:'TCE-PB', status:'Edital esperado, sem data certa'},
+  {nome:'TCE-RJ', status:'Previsto no orçamento 2027'},
+  {nome:'TCU', status:'Foco principal — o núcleo já é a preparação'}
+];
+
+const rotina = {
+  0:'Descanso ou revisão leve',
+  1:'Direito Administrativo + Licitações',
+  2:'Português + prática discursiva Cebraspe',
+  3:'Direito Constitucional + Controle Externo',
+  4:'AFO + Administração Geral e Pública',
+  5:'Complementares (rotativo)',
+  6:'Bateria de questões (Cebraspe) + discursiva FCC'
+};
+
+let state = {weeksDone:{}, nucleoDone:{}, dailyLog:{}};
+
+function todayMidnight(){
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  return d;
+}
+function parseDate(s){
+  const d = new Date(s + 'T00:00:00');
+  return d;
+}
+function fmtBR(s){
+  const d = parseDate(s);
+  return d.toLocaleDateString('pt-BR');
+}
+function daysBetween(a,b){
+  return Math.round((b-a)/86400000);
+}
+function isoDate(d){
+  return d.toISOString().slice(0,10);
+}
+
+async function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      state = Object.assign({weeksDone:{}, nucleoDone:{}, dailyLog:{}}, parsed);
+    }
+  }catch(e){
+    state = {weeksDone:{}, nucleoDone:{}, dailyLog:{}};
+  }
+}
+async function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){}
+}
+
+function currentWeek(){
+  const today = todayMidnight();
+  for(const w of weeks){
+    const start = parseDate(w.start);
+    const end = w.end ? parseDate(w.end) : null;
+    if(today >= start && (end === null || today <= end)) return w;
+  }
+  if(today < parseDate(weeks[0].start)) return weeks[0];
+  return weeks[weeks.length-1];
+}
+
+function renderCountdowns(){
+  const today = todayMidnight();
+  const tcdf = parseDate('2026-11-22');
+  const tcego = parseDate('2027-01-17');
+  const items = [
+    {nome:'TCDF', date:tcdf, dateStr:'22/11/2026'},
+    {nome:'TCE-GO', date:tcego, dateStr:'17/01/2027'}
+  ];
+  const html = items.map(it=>{
+    const diff = daysBetween(today, it.date);
+    let daysTxt, unitTxt;
+    if(diff > 0){ daysTxt = diff; unitTxt = diff===1?'dia':'dias'; }
+    else if(diff === 0){ daysTxt = 'hoje'; unitTxt=''; }
+    else { daysTxt = 'realizada'; unitTxt=''; }
+    return '<div class="countdown-card">'
+      + '<p class="label">' + it.nome + '</p>'
+      + '<p class="days">' + daysTxt + (unitTxt ? '<span> '+unitTxt+'</span>' : '') + '</p>'
+      + '<p class="date">' + it.dateStr + '</p>'
+      + '</div>';
+  }).join('');
+  document.getElementById('countdownRow').innerHTML = html;
+}
+
+function renderPainel(){
+  const w = currentWeek();
+  const phase = phases.find(p=>p.id===w.faseId);
+  const today = todayMidnight();
+
+  document.getElementById('faseAtualCard').innerHTML =
+    '<span class="tag">fase atual</span>'
+    + '<h2>' + phase.nome + '</h2>'
+    + '<p class="muted">' + phase.range + ' — semana ' + w.n + '</p>';
+
+  document.getElementById('focoSemanaCard').innerHTML =
+    '<h3>Foco desta semana</h3>'
+    + '<p>' + w.foco + '</p>'
+    + (w.exam ? '<p class="tag success">' + w.exam + '</p>' : '');
+
+  const dow = today.getDay();
+  const isoToday = isoDate(today);
+  const done = !!state.dailyLog[isoToday];
+
+  let streakHtml = '<div class="streak">';
+  for(let i=6;i>=0;i--){
+    const d = new Date(today);
+    d.setDate(d.getDate()-i);
+    const key = isoDate(d);
+    const cls = state.dailyLog[key] ? 'dot done' : 'dot';
+    streakHtml += '<div class="'+cls+'" title="'+d.toLocaleDateString('pt-BR')+'"></div>';
+  }
+  streakHtml += '</div>';
+
+  document.getElementById('hojeCard').innerHTML =
+    '<h3>Rotina de hoje</h3>'
+    + '<div class="today-line">'
+    + '<div class="txt"><strong>' + rotina[dow] + '</strong><span class="muted">' + today.toLocaleDateString('pt-BR', {weekday:'long'}) + '</span></div>'
+    + '<button class="check-btn' + (done?' done':'') + '" id="todayCheckBtn">' + (done ? 'Estudado hoje' : 'Marcar como estudado') + '</button>'
+    + '</div>'
+    + streakHtml;
+
+  document.getElementById('todayCheckBtn').addEventListener('click', async ()=>{
+    state.dailyLog[isoToday] = !state.dailyLog[isoToday];
+    await saveState();
+    renderPainel();
+  });
+
+  document.getElementById('plataformaAtivaCard').innerHTML =
+    '<h3>Plataforma ativa nesta fase</h3>'
+    + '<p class="muted">' + phase.plataforma + '</p>';
+}
+
+function weeksProgress(){
+  const total = weeks.length - 1;
+  const doneCount = weeks.slice(0,total).filter(w=>state.weeksDone[w.n]).length;
+  return {doneCount, total};
+}
+
+function renderCronograma(){
+  const {doneCount, total} = weeksProgress();
+  const pct = Math.round((doneCount/total)*100);
+  document.getElementById('weeksProgressBar').style.width = pct + '%';
+  document.getElementById('weeksProgressLabel').textContent = doneCount + ' de ' + total + ' semanas concluídas (' + pct + '%)';
+
+  let html = '';
+  for(const phase of phases){
+    const phaseWeeks = weeks.filter(w=>w.faseId===phase.id);
+    let rows = '';
+    for(const w of phaseWeeks){
+      const checked = !!state.weeksDone[w.n];
+      const rangeTxt = w.end ? (fmtBR(w.start)+' a '+fmtBR(w.end)) : (fmtBR(w.start)+' em diante');
+      rows += '<tr>'
+        + '<td class="week-num">' + w.n + '</td>'
+        + '<td class="week-range">' + rangeTxt + '</td>'
+        + '<td class="week-focus">' + w.foco + (w.exam ? '<span class="exam">'+w.exam+'</span>' : '') + '</td>'
+        + '<td class="week-check">' + (w.end ? '<input type="checkbox" data-week="'+w.n+'" '+(checked?'checked':'')+'>' : '') + '</td>'
+        + '</tr>';
+    }
+    html += '<div class="phase-block">'
+      + '<div class="phase-header"><h3>' + phase.nome + '</h3><span class="range">' + phase.range + '</span></div>'
+      + '<table class="week-table"><tbody>' + rows + '</tbody></table>'
+      + '</div>';
+  }
+  document.getElementById('phasesContainer').innerHTML = html;
+
+  document.querySelectorAll('#phasesContainer input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', async (e)=>{
+      const n = e.target.getAttribute('data-week');
+      state.weeksDone[n] = e.target.checked;
+      await saveState();
+      renderCronograma();
+    });
+  });
+}
+
+function nucleoProgress(){
+  const all = [...nucleoCore, ...nucleoExtra];
+  const doneCount = all.filter(item=>state.nucleoDone[item.id]).length;
+  return {doneCount, total:all.length};
+}
+
+function renderNucleoList(containerId, list, coreLabel){
+  const html = list.map(item=>{
+    const checked = !!state.nucleoDone[item.id];
+    return '<div class="nucleo-item">'
+      + '<div class="row">'
+      + '<input type="checkbox" id="nuc-'+item.id+'" data-nucleo="'+item.id+'" '+(checked?'checked':'')+'>'
+      + '<label for="nuc-'+item.id+'">' + item.nome + '</label>'
+      + (coreLabel ? '<span class="core-badge">núcleo</span>' : '')
+      + '</div>'
+      + '<p class="topicos">' + item.topicos.join(' · ') + '</p>'
+      + '</div>';
+  }).join('');
+  document.getElementById(containerId).innerHTML = html;
+
+  document.querySelectorAll('#'+containerId+' input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', async (e)=>{
+      const id = e.target.getAttribute('data-nucleo');
+      state.nucleoDone[id] = e.target.checked;
+      await saveState();
+      renderNucleo();
+    });
+  });
+}
+
+function renderNucleo(){
+  const {doneCount, total} = nucleoProgress();
+  const pct = Math.round((doneCount/total)*100);
+  document.getElementById('nucleoProgressBar').style.width = pct + '%';
+  document.getElementById('nucleoProgressLabel').textContent = doneCount + ' de ' + total + ' disciplinas com base concluída (' + pct + '%)';
+  renderNucleoList('nucleoCoreList', nucleoCore, true);
+  renderNucleoList('nucleoExtraList', nucleoExtra, false);
+}
+
+function renderPlataformas(){
+  const w = currentWeek();
+  const html = platforms.map(p=>{
+    const active = w.faseId >= p.ativarFase;
+    return '<tr>'
+      + '<td>' + p.nome + '</td>'
+      + '<td class="muted">' + p.funcao + '</td>'
+      + '<td>' + (active ? '<span class="active-flag">ativa</span>' : '<span class="muted">ainda não</span>') + '</td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('platBody').innerHTML = html;
+}
+
+function renderDatas(){
+  const today = todayMidnight();
+  const rows = keyDates.map(d=>{
+    const date = parseDate(d.data);
+    const diff = daysBetween(today, date);
+    let remTxt;
+    if(diff > 0) remTxt = 'faltam ' + diff + (diff===1?' dia':' dias');
+    else if(diff === 0) remTxt = 'é hoje';
+    else remTxt = 'já ocorreu';
+    return '<tr>'
+      + '<td class="d">' + fmtBR(d.data) + '</td>'
+      + '<td class="lbl' + (d.destaque?' destaque':'') + '">' + d.label + '</td>'
+      + '<td class="rem">' + remTxt + '</td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('datesTable').innerHTML = rows;
+
+  const oppHtml = opportunistic.map(o=>
+    '<div class="opp-item"><span class="name">' + o.nome + '</span><span class="status">' + o.status + '</span></div>'
+  ).join('');
+  document.getElementById('opportunisticList').innerHTML = oppHtml;
+}
+
+function setupTabs(){
+  const buttons = document.querySelectorAll('#tabs button');
+  buttons.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      buttons.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('section.panel').forEach(p=>p.classList.remove('active'));
+      document.getElementById('panel-'+btn.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+}
+
+async function init(){
+  await loadState();
+  renderCountdowns();
+  renderPainel();
+  renderCronograma();
+  renderNucleo();
+  renderPlataformas();
+  renderDatas();
+  setupTabs();
+}
+
+init();
+</script>
+</body>
+</html>
